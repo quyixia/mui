@@ -186,25 +186,6 @@ var mui = (function(document, undefined) {
 		return this;
 	};
 	/**
-	 * map
-	 */
-	$.map = function(elements, callback) {
-		var value, values = [],
-			i, key;
-		if (typeof elements.length === 'number') { //TODO 此处逻辑不严谨，可能会有Object:{a:'b',length:1}的情况未处理
-			for (i = 0, len = elements.length; i < len; i++) {
-				value = callback(elements[i], i);
-				if (value != null) values.push(value);
-			}
-		} else {
-			for (key in elements) {
-				value = callback(elements[key], key);
-				if (value != null) values.push(value);
-			}
-		}
-		return values.length > 0 ? [].concat.apply([], values) : values;
-	};
-	/**
 	 * each
 	 * @param {type} elements
 	 * @param {type} callback
@@ -320,19 +301,28 @@ var mui = (function(document, undefined) {
 		}
 		return result;
 	};
-
-	$.registerHandler = function(type, handler) {
-		var handlers = $[type];
-		if (!handlers) {
-			handlers = [];
+	$.hooks = {};
+	$.addAction = function(type, hook) {
+		var hooks = $.hooks[type];
+		if (!hooks) {
+			hooks = [];
 		}
-		handler.index = handler.index || 1000;
-		handlers.push(handler);
-		handlers.sort(function(a, b) {
+		hook.index = hook.index || 1000;
+		hooks.push(hook);
+		hooks.sort(function(a, b) {
 			return a.index - b.index;
 		});
-		$[type] = handlers;
-		return $[type];
+		$.hooks[type] = hooks;
+		return $.hooks[type];
+	};
+	$.doAction = function(type, callback) {
+		if ($.isFunction(callback)) { //指定了callback
+			$.each($.hooks[type], callback);
+		} else { //未指定callback，直接执行
+			$.each($.hooks[type], function(index, hook) {
+				return !hook.handle();
+			});
+		}
 	};
 	/**
 	 * setTimeout封装

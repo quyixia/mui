@@ -49,6 +49,7 @@ module.exports = function(grunt) {
 					'js/mui.detect.5+.js',
 					'js/mui.target.js',
 					'js/mui.fixed.js',
+					'js/mui.fixed.bind.js',
 					'js/mui.fixed.classlist.js',
 					'js/mui.fixed.animation.js',
 					'js/mui.fixed.fastclick.js',
@@ -62,6 +63,7 @@ module.exports = function(grunt) {
 					'js/mui.gestures.tap.js',
 					'js/mui.gestures.longtap.js',
 					'js/mui.gestures.hold.js',
+					'js/mui.gestures.pinch.js',
 					'js/mui.init.js',
 					'js/mui.init.5+.js',
 					'js/mui.back.js',
@@ -149,7 +151,7 @@ module.exports = function(grunt) {
 		uglify: {
 			options: {
 				banner: '<%= banner %>',
-				compress: true,
+				compress: {},
 				mangle: true,
 				preserveComments: false
 			},

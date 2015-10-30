@@ -29,6 +29,7 @@
 			var self = this;
 			//			document.addEventListener('plusscrollbottom', this);
 			window.addEventListener('dragup', self);
+			document.addEventListener("plusscrollbottom", self);
 			self.scrollInterval = window.setInterval(function() {
 				if (self.isScroll && !self.loading) {
 					if (window.pageYOffset + window.innerHeight + 10 >= document.documentElement.scrollHeight) {
@@ -96,7 +97,7 @@
 			//				}
 			//			}
 			self.isScroll = false;
-			if (e.type === 'dragup') {
+			if (e.type === 'dragup' || e.type === 'plusscrollbottom') {
 				self.isScroll = true;
 				setTimeout(function() {
 					self.isScroll = false;
@@ -132,9 +133,15 @@
 				});
 			}
 		},
-		pulldownLoading: function() {
+		pulldownLoading: function() { //该方法是子页面调用的
 			var callback = $.options.pullRefresh.down.callback;
 			callback && callback.call(this);
+		},
+		_pulldownLoading: function() { //该方法是子页面调用的
+			var self = this;
+			$.plusReady(function() {
+				plus.webview.getWebviewById(self.options.webviewId).evalJS("mui&&mui.options.pullRefresh.down&&mui.options.pullRefresh.down.callback()");
+			});
 		},
 		endPulldownToRefresh: function() { //该方法是子页面调用的
 			var webview = plus.webview.currentWebview();
@@ -184,7 +191,8 @@
 					self.pullCaption.innerHTML = self.options.up.contentnomore;
 					//					self.bottomPocket.classList.remove(CLASS_BLOCK);
 					//					self.bottomPocket.classList.add(CLASS_HIDDEN);
-					//					document.removeEventListener('plusscrollbottom', self);
+					//取消5+的plusscrollbottom事件
+					document.removeEventListener('plusscrollbottom', self);
 					window.removeEventListener('dragup', self);
 				} else { //初始化时隐藏，后续不再隐藏
 					self.pullCaption.className = CLASS_PULL_CAPTION + ' ' + CLASS_PULL_CAPTION_DOWN;
@@ -195,16 +203,25 @@
 				}
 			}
 		},
+		disablePullupToRefresh: function() {
+			this._initPullupRefresh();
+			this.bottomPocket.className = $.className('pull-bottom-pocket') + ' ' + CLASS_HIDDEN;
+			window.removeEventListener('dragup', this);
+		},
+		enablePullupToRefresh: function() {
+			this._initPullupRefresh();
+			this.bottomPocket.classList.remove(CLASS_HIDDEN);
+			this.pullCaption.className = CLASS_PULL_CAPTION + ' ' + CLASS_PULL_CAPTION_DOWN;
+			this.pullCaption.innerHTML = this.options.up.contentdown;
+			document.addEventListener("plusscrollbottom", this);
+			window.addEventListener('dragup', this);
+		},
 		scrollTo: function(x, y, time) {
-			$.scrollTo(x, y, time);
+			$.scrollTo(y, time);
 		},
 		refresh: function(isReset) {
 			if (isReset && this.finished) {
-				this._initPullupRefresh();
-				this.bottomPocket.classList.remove(CLASS_HIDDEN);
-				this.pullCaption.className = CLASS_PULL_CAPTION + ' ' + CLASS_PULL_CAPTION_DOWN;
-				this.pullCaption.innerHTML = this.options.up.contentdown;
-				window.addEventListener('dragup', this);
+				this.enablePullupToRefresh();
 				this.finished = false;
 			}
 		}
@@ -237,7 +254,9 @@
 		} else {
 			pullRefreshApi = $.data[id];
 		}
-		if (options.up && options.up.auto) { //如果设置了auto，则自动上拉一次
+		if (options.down && options.down.auto) { //如果设置了auto，则自动下拉一次
+			pullRefreshApi._pulldownLoading(); //parent webview
+		} else if (options.up && options.up.auto) { //如果设置了auto，则自动上拉一次
 			pullRefreshApi.pullupLoading();
 		}
 		return pullRefreshApi;

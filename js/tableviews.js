@@ -145,7 +145,7 @@
 							timer = $.later(function() {
 								toggleActive(true);
 							}, 100);
-						} else{
+						} else {
 							toggleActive(true);
 						}
 					}
@@ -426,8 +426,8 @@
 		sliderHandle && toggleEvents(cell, true);
 	});
 	var radioOrCheckboxClick = function(event) {
-		var type = event.target&&event.target.type||'';
-		if(type==='radio'||type==='checkbox'){
+		var type = event.target && event.target.type || '';
+		if (type === 'radio' || type === 'checkbox') {
 			return;
 		}
 		var classList = cell.classList;
@@ -435,13 +435,19 @@
 			var input = cell.querySelector('input[type=radio]');
 			if (input) {
 				//				input.click();
-				input.checked = !input.checked;
+				if (!input.disabled && !input.readOnly) {
+					input.checked = !input.checked;
+					$.trigger(input, 'change');
+				}
 			}
 		} else if (classList.contains($.className('checkbox'))) {
 			var input = cell.querySelector('input[type=checkbox]');
 			if (input) {
 				//				input.click();
-				input.checked = !input.checked;
+				if (!input.disabled && !input.readOnly) {
+					input.checked = !input.checked;
+					$.trigger(input, 'change');
+				}
 			}
 		}
 	};

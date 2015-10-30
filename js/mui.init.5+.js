@@ -36,10 +36,7 @@
 	 * @returns {Object}
 	 */
 	$.waitingOptions = function(options) {
-		return $.extend({
-			autoShow: true,
-			title: ''
-		}, options);
+		return $.extend(true,{},{autoShow: true,title: ''}, options);
 	};
 	/**
 	 * 窗口显示配置
@@ -47,7 +44,7 @@
 	 * @returns {Object}
 	 */
 	$.showOptions = function(options) {
-		return $.extend(defaultShow, options);
+		return $.extend(true,{},defaultShow, options);
 	};
 	/**
 	 * 窗口默认配置
@@ -86,7 +83,13 @@
 	 */
 	$.fire = function(webview, eventType, data) {
 		if (webview) {
-			webview.evalJS("typeof mui!=='undefined'&&mui.receive('" + eventType + "','" + JSON.stringify(data || {}).replace(/\'/g, "\\u0027").replace(/\\/g, "\\u005c") + "')");
+			if (data !== '') {
+				data = data || {};
+				if ($.isPlainObject(data)) {
+					data = JSON.stringify(data || {}).replace(/\'/g, "\\u0027").replace(/\\/g, "\\u005c");
+				}
+			}
+			webview.evalJS("typeof mui!=='undefined'&&mui.receive('" + eventType + "','" + data + "')");
 		}
 	};
 	/**
@@ -97,7 +100,11 @@
 	 */
 	$.receive = function(eventType, data) {
 		if (eventType) {
-			data = JSON.parse(data);
+			try {
+				if (data) {
+					data = JSON.parse(data);
+				}
+			} catch (e) {}
 			$.trigger(document, eventType, data);
 		}
 	};
@@ -155,20 +162,17 @@
 		}
 		options = options || {};
 		var params = options.params || {};
-		var webview, nShow, nWaiting;
-		if ($.webviews[id]) { //已缓存
-			var webviewCache = $.webviews[id];
-			webview = webviewCache.webview;
-			//需要处理用户手动关闭窗口的情况，此时webview应该是空的；
-			if (!webview || !webview.getURL()) {
-				//再次新建一个webview；
-				options = $.extend(options, {
-					id: id,
-					url: url,
-					preload: true
-				}, true);
-				webview = $.createWindow(options);
+		var webview = null,webviewCache = null, nShow, nWaiting;
+
+		if($.webviews[id]){
+			webviewCache = $.webviews[id];
+			//webview真实存在，才能获取
+			if(plus.webview.getWebviewById(id)){
+				webview = webviewCache.webview;
 			}
+		}
+
+		if (webviewCache&&webview) { //已缓存
 			//每次show都需要传递动画参数；
 			//预加载的动画参数优先级：openWindow配置>preloadPages配置>mui默认配置；
 			nShow = webviewCache.show;
@@ -247,7 +251,7 @@
 				}
 
 				//之前没有，那就新创建	
-				if(!webview){
+				if (!webview) {
 					webview = plus.webview.create(options.url, id, $.windowOptions(options.styles), $.extend({
 						preload: true
 					}, options.extras));
@@ -389,7 +393,7 @@
 	$.plusReady(function() {
 		$.currentWebview = plus.webview.currentWebview();
 	});
-	$.registerInit({
+	$.addInit({
 		name: '5+',
 		index: 100,
 		handle: function() {

@@ -6,7 +6,7 @@
  */
 (function($, window) {
 	if ($.os.plus && $.os.android) {
-		$.registerBack({
+		$.addBack({
 			name: 'mui',
 			index: 5,
 			handle: function() {
@@ -21,13 +21,18 @@
 					$(offCanvas).offCanvas('close');
 					return true;
 				}
+				var previewImage = $.isFunction($.getPreviewImage) && $.getPreviewImage();
+				if (previewImage && previewImage.isShown()) {
+					previewImage.close();
+					return true;
+				}
 			}
 		});
 	}
 	/**
 	 * 5+ back
 	 */
-	$.registerBack({
+	$.addBack({
 		name: '5+',
 		index: 10,
 		handle: function() {
@@ -96,7 +101,7 @@
 		}
 	});
 	//处理按键监听事件
-	$.registerInit({
+	$.addInit({
 		name: 'keyEventBind',
 		index: 1000,
 		handle: function() {
